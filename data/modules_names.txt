@@ -1,0 +1,3 @@
+test_commands
+home_mephi_intn
+testa_testa
