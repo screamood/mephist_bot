@@ -56,6 +56,10 @@ def check_msg_user(peer_id, cursor, FOR_CONTROL):
 def by_user(event, cursor, FOR_CONTROL):
     com = event.message.text.lower()
     from_id, peer_id = event.message.from_id, event.message.peer_id
+
+    if db_meth.set_lang(from_id, cursor, FOR_CONTROL['conn'])==0:
+        FOR_CONTROL['vk_session'].method('messages.send', {'random_id':FOR_CONTROL['cur_time'](), 'peer_id':from_id, 'message':'&#9888;Please, enter "/lang" for change language. Now language: russian.&#9888;'})
+
     for k in command['from_user']:
         if com.startswith(k):
             #if vh.is_allowed_msg_from_group(from_id)['is_allowed']==0:

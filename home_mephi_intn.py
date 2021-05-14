@@ -14,12 +14,7 @@ def encrypt_str(str):
     #return "Добрый день.\  ##для тестирования на Самарченко
 #\nГармонические колебания."
 
-#работает корректно только после проверки на регистрацию
 def get_lang(event, cursor, FOR_CONTROL):
-    from_id = event.message.from_id
-    res = db_meth.check_for_id(from_id, cursor, FOR_CONTROL['conn'])
-    if res == 0: ##если не зареган
-        return 'RU'
     return db_meth.get_lang(FOR_CONTROL['conn'], event.message.from_id)
 
 def reg(event, cursor, FOR_CONTROL):
@@ -41,7 +36,7 @@ def reg_abitur(event, cursor, FOR_CONTROL):
         FOR_CONTROL['vk_session'].method('messages.send', {'random_id':FOR_CONTROL['cur_time'](), 'peer_id':idd, 'message':ans})
         return
 
-    db_meth.add_user(FOR_CONTROL['conn'], idd, rebuild_vk_id(int(idd)), [], 'Абитуриент', 'Абитуриент', '0', 0)
+    db_meth.add_user(FOR_CONTROL['conn'], idd, rebuild_vk_id(int(idd)), [], 'Абитуриент', 'Абитуриент', '0', 0, 'none')
     FOR_CONTROL['vk_session'].method('messages.send', {'random_id':FOR_CONTROL['cur_time'](), 'peer_id':idd, 'message':enru.sub[1][get_lang(event, cursor, FOR_CONTROL)]})
 
 
@@ -73,11 +68,13 @@ def reg_ok(event, cursor, FOR_CONTROL):
         return
 
     first_msg = soup.find('div', {'class':'panel panel-post panel-default'}).find('div', {'class':'media-body'}).find('p').text ##код по идее
-    author_fio = soup.find('div', {'class':'panel panel-post panel-default'}).find('div', {'class':'media-body'}).find('li').text  ##имя автора по идее
 
     if str_for_find not in first_msg:
         FOR_CONTROL['vk_session'].method('messages.send', {'random_id':FOR_CONTROL['cur_time'](), 'peer_id':idd, 'message':enru.sub['err_reg'][get_lang(event, cursor, FOR_CONTROL)]})
         return
+
+    author_fio = soup.find('div', {'class':'panel panel-post panel-default'}).find('div', {'class':'media-body'}).find('li').text  ##имя автора по идее
+    author_link = 'https://home.mephi.ru/'+soup.find('div', {'class':'panel panel-post panel-default'}).find('div', {'class':'user-avatar user-small'}).find('a').get('href')
 
 
     link = 'https://home.mephi.ru'+str(soup.find('div', {'class':'panel panel-post panel-default'}).find('div', {'class':'media-left'}).find('a').get('href'))
@@ -88,7 +85,6 @@ def reg_ok(event, cursor, FOR_CONTROL):
     r = FOR_CONTROL['session'].get(link)
 
     status=1
-    lang = 'RU'
 
     soup = BeautifulSoup(r.text, "html.parser")
 
@@ -99,7 +95,7 @@ def reg_ok(event, cursor, FOR_CONTROL):
             break
 
     group_num = soup.find('div', {'class':'btn-group'}).find('a', {'class':'btn btn-primary btn-outline'}).text[:-14:]
-    db_meth.add_user(FOR_CONTROL['conn'], idd, rebuild_vk_id(int(idd)), [], author_fio, first_name, group_num, status, lang)
+    db_meth.add_user(FOR_CONTROL['conn'], idd, rebuild_vk_id(int(idd)), [], author_fio, first_name, group_num, status, link)
     FOR_CONTROL['vk_session'].method('messages.send', {'random_id':FOR_CONTROL['cur_time'](), 'peer_id':idd, 'message':enru.sub[2][get_lang(event, cursor, FOR_CONTROL)]})
 
 def reg_cancel(event, cursor, FOR_CONTROL):
@@ -114,16 +110,11 @@ def reg_cancel(event, cursor, FOR_CONTROL):
 
 def change_lang(event, cursor, FOR_CONTROL):
     from_id = event.message.from_id
-    res = db_meth.check_for_id(from_id, cursor, FOR_CONTROL['conn'])
-    if res == 0:
-        ans = enru.sub['empt_stat'][get_lang(event, cursor, FOR_CONTROL)]
-        FOR_CONTROL['vk_session'].method('messages.send', {'random_id':FOR_CONTROL['cur_time'](), 'peer_id':from_id, 'message':ans})
-        return
     l = ['RU', 'EN']
     now = db_meth.get_lang(FOR_CONTROL['conn'], from_id)
     new = l[(l.index(now)+1)%len(l)]
     db_meth.edit_lang(FOR_CONTROL['conn'], from_id, new)
-    ##вывести надпись, что язык изменен
+    FOR_CONTROL['vk_session'].method('messages.send', {'random_id':FOR_CONTROL['cur_time'](), 'peer_id':from_id, 'message':enru.sub['ch_lg'][get_lang(event, cursor, FOR_CONTROL)]})
 
 
 
@@ -131,6 +122,6 @@ meths={
 '/reg':[reg],
 '/ok_reg':[reg_ok],
 '/canc_reg':[reg_cancel],
-'/regn':[reg_abitur],
+'/app_reg':[reg_abitur],
 '/lang':[change_lang]
 }

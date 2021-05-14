@@ -1,3 +1,6 @@
 test_commands
 home_mephi_intn
+mailing
+organisations
+knowledge_base
 testa_testa
